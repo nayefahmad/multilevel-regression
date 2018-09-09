@@ -73,7 +73,9 @@ df4.county.uranium <- data.frame(county.uranium = u,
 
 # final combined dataset: 
 df5.combined.data <- df2.test.data %>% 
-    left_join(df4.county.uranium)
+    left_join(df4.county.uranium) %>% 
+    mutate(floor = factor(floor, 
+                          levels = c(0, 1)))
 
 str(df5.combined.data)
 head(df5.combined.data)
