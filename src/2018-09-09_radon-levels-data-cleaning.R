@@ -67,12 +67,17 @@ uranium <- df3.county[usa.rows,"Uppm"]
 u <- log (uranium)
 
 df4.county.uranium <- data.frame(county.uranium = u, 
-                                 countyID = seq_along(u))
+                                 row = seq_along(u))
 # df4.county.uranium
 
 
 # final combined dataset: 
+county.ID.list <- unique(df2.test.data$countyID)
+df6.crossref <- data.frame(countyID = county.ID.list, 
+                           row = row_number(county.ID.list))
+
 df5.combined.data <- df2.test.data %>% 
+    inner_join(df6.crossref) %>% 
     left_join(df4.county.uranium) %>% 
     mutate(floor = factor(floor, 
                           levels = c(0, 1)))
