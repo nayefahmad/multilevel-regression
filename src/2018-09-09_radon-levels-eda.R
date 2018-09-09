@@ -23,6 +23,7 @@ source(here("src",
             "2018-09-09_radon-levels-data-cleaning.R"))
 
 
+# EXPLORATORY DATA ANALYSIS : ----------
 # correlation plot: 
 p1.pairs <- df5.combined.data %>%
     select(radon.log, 
@@ -88,7 +89,9 @@ dev.off()
 
 
 
-
+#****************************************************
+# CLASSICAL REGRESSION MODELS ---------
+#****************************************************
 
 # model with only floor as predictor, with full pooling: 
 m0.floor <- lm(radon.log ~ floor - 1,  # add "-1" to show all levels of the factor floor 
@@ -104,6 +107,15 @@ summary(m1.floor.no.pool)
 #   because there's too little data in many of them, and without 
 #   pooling, we can't estimate their effects with any confidence. 
 
+# also, all the county factors are absorbed into the single 
+# indicator variable. We have no model for how group-levle 
+# predictors prduce the values of the indicator coefficients. 
+
+# If our reseaerch question was: "What's the impact of county 
+# uranium levels, after properly accounting for the hierarchical 
+# structure of houses in counties", then this model is useless.  
+
+
 
 
 # model with only county level predictor 
@@ -111,4 +123,46 @@ m2.uranium <- lm(radon.log ~ county.uranium,
                  data = df5.combined.data)
 summary(m2.uranium)
 
-# model is not significant. 
+
+# county and house-level predictors: 
+m3.floor.and.ur <- lm(radon.log ~ floor + county.uranium, 
+                      data = df5.combined.data)
+summary(m3.floor.and.ur)
+
+
+# what happens if we include both county indicators and county-level
+#   predictor in a classical regression? 
+# ANS. doesn't work. You get NA for uranium estimate 
+m4.test <- lm(radon.log ~ floor + county + county.uranium, 
+              data = df5.combined.data)
+summary(m3.test)
+
+
+
+
+# DISCUSSION------------------------
+# Where does all this leave us? We can conclude from model m3 that radon 
+# decreases on 1st floor, and increases as county uranium increases.
+
+# However, our confidence in the estimates is low because they do not 
+# take into account the grouped structure of the data: all the houses 
+# in the same county are more similar to one another than to those 
+# in a different county. Failing to do this impacts standard errors and 
+# can cause us to make incorrect inferences. In multilevel modelling, 
+# we can add the same term alpha_j to all houses that are in the same 
+# county, whicn induces the correlation structure we want. 
+
+# Also focusing on m3, note that a county's effect cannot be fully specified by its 
+# uranium level: it's not a perfect correlation. So it is a problem 
+# that we can't enter both the group-level predictors and group indicators. 
+# There's an error associated with identifying a county using its 
+# predictors (call this the group level error). 
+
+# Then there's a separate error associated with the 
+# individual house level: even after fully accountign for floor and 
+# county effect, there we cannot fully predict log radon. 
+
+# Classical regression does not allow us to separate out these errors, 
+# which limits the inferences we can make. 
+
+
