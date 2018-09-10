@@ -34,7 +34,7 @@ p1.pairs <- df5.combined.data %>%
 # 1) note that log radon has a very nice-looking normalish distribution
 # 2) also note that there is the suggestion that floor 0 predicts 
 #   higher radon levels than floor 1 
-# 3) Weak suggestion that as uranium level increases, log radon increases
+# 3) Suggestion that as uranium level increases, log radon increases
 #   (see scatterplot on lower left) 
 
 ggsave(here("results", "output from src", 
@@ -78,6 +78,7 @@ for (i in 1:nrow(df6.crossref)) {
 
 # examine plots (will take a while to run) : 
 # plot.list
+# plot.list[[15]]
 
 pdf(here("results", "output from src", 
          "radon-vs-floor-all-counties.pdf"))
@@ -138,6 +139,18 @@ m4.test <- lm(radon.log ~ floor + county + county.uranium,
 summary(m3.test)
 
 
+
+# summarize models 
+df7.model.summary <- 
+    data.frame(model = paste0("m", 0:3), 
+               predictors = c("floor", 
+                              "floor + county", 
+                              "county.uranium", 
+                              "floor + county.uranium"), 
+               issues = c("no group-level predictors", 
+                          "all group-level predictors absorbed into intercept \"county\", without acknowledging that there is a group-level error in specifying county effects", 
+                          "no individual-level predictors ", 
+                          "fully pooled model: error structure does not allow for different groups to behave differently ")) %>% print
 
 
 # DISCUSSION------------------------
