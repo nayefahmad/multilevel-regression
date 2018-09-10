@@ -16,6 +16,7 @@ library("here")
 library("GGally")
 library("lme4")
 library("arm")  # package for the book 
+library("ggpubr")
 
 # help(package = "arm")
 # rm(list = ls())
@@ -147,8 +148,8 @@ m4.1.county.only <- lm(radon.log ~ county,
                      data = df5.combined.data)
 summary(m4.1.county.only)
 
-# histograms: 
-df5.combined.data$radon.log %>% hist(xlim = c(-3, 4))       # actual values
+# >> histograms: -----
+df5.combined.data$radon.log %>% hist(xlim = c(-3, 4))   # actual values
 predict(m4.1.county.only) %>% hist(xlim = c(-3, 4)) # predicted values 
 
 # graph of actual versus predicted values: 
@@ -160,7 +161,12 @@ p3.actual.vs.pred.m4.1 <- df5.combined.data %>%
     scale_y_continuous(limits = c(-2.5, 5)) + 
     geom_abline(slope = 1, 
                 intercept = 0, 
-                colour = "blue"); p3.actual.vs.pred.m4.1
+                colour = "grey60") + 
+    geom_smooth() + 
+    
+    labs(x = "Fitted values from classical regression (intercepts only)", 
+         y = "Actual response values") + 
+    theme_classic(); p3.actual.vs.pred.m4.1
 
 
 
@@ -234,6 +240,7 @@ head(df8.pred.m5, 20)
 #   for the second level of the regression).
 # Mean of this dist is 1.33, s.dev is 0.31
 
+# >> histograms: ------
 predict(m5.multilevel.intercepts) %>% hist(xlim = c(-3, 4)) # predicted values 
 df5.combined.data$radon.log %>% hist(xlim = c(-3, 4))       # actual values
 # umm, no, maybe not?? Perhaps it's because of the added variance
@@ -248,7 +255,12 @@ p4.actual.vs.pred.m5 <- df5.combined.data %>%
     scale_y_continuous(limits = c(-2.5, 5)) + 
     geom_abline(slope = 1, 
                 intercept = 0, 
-                colour = "blue"); p4.actual.vs.pred.m5
+                colour = "grey60") + 
+    geom_smooth() + 
+    
+    labs(x = "Fitted values from multilevel regression (intercepts only)", 
+         y = "Actual response values") + 
+    theme_classic(); p4.actual.vs.pred.m5
 
 
 
@@ -261,3 +273,28 @@ m6.mult.floor <- lmer(radon.log ~ floor + (1 | county),
                       data = df5.combined.data)
 summary(m6.mult.floor)
 arm::display(m6.mult.floor)  # custom display fn
+
+
+
+
+
+
+
+
+
+
+
+#******************************************************
+# WRITE OUTPUTS: -----------
+#******************************************************
+
+# classical vs multilevel regression 
+ggarrange(p3.actual.vs.pred.m4.1, 
+          p4.actual.vs.pred.m5, 
+          nrow = 2) %>% 
+    annotate_figure(top = text_grob("Compared to classical regression with only county indicators (top plot), \nthe multilevel regression with only county indicators restricts the range of predicted values \n  ", 
+                                    size = 16), 
+                    bottom = text_grob("\nSee Gelman and Hill, p257: \"The higher-level distribution has the effect of pulling the estimates of \nalpha_j toward the mean level mu_j\" \nThis is especially useful for estimates in counties with very small sample sizes \nIt also allows us to account for the fact that individuals within the same county are correlated with one another \n ", 
+                                       size = 12))
+ggsave(here("results", "output from src", 
+            "compare-classical-and-multilevel-regression-intercept-only.pdf"))    
